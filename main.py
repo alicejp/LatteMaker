@@ -11,6 +11,7 @@ resources = {
     "water": 100,
     "milk": 200,
     "coffee": 100,
+    "money": 0,
 }
 coins = {
     "quarters": 0.25,
@@ -45,33 +46,54 @@ MENU = {
 }
 
 
-# TODO: also shows the money, Money: £2.5
 def print_report():
     for key, value in resources.items():
         unit = "ml"
         if key.lower() == "water" or key.lower() == "milk":
             unit = "ml"
-        else:
+            print(f'{key}: {value}{unit}')
+        elif key.lower() == "coffee":
             unit = "g"
-        print(f'{key}: {value}{unit}')
+            print(f'{key}: {value}{unit}')
+        else:
+            unit = "£"
+            print(f'{key}: {unit}{value}')
 
 
 def check_resource(coffeeKey):
+    # check ingredients
     for key, value in MENU[coffeeKey]["ingredients"].items():
-        isEnough = (int(value) <= int(resources[key]))
-        print(f'{key}: {value}, isEnough {isEnough}')
-        if not isEnough:
+        is_enough = (int(value) <= int(resources[key]))
+        print(f'{key}: {value}, isEnough {is_enough}')
+        if not is_enough:
             print(f'Sorry there is not enough {key} for {coffeeKey}')
             return False
-    # TODO 5: if it is enough, we should use the ingredient, but we might need to check the cash first
+
+    # check money
+    # if it is enough, we should use the ingredient, but we might need to check the cash first
     print(f'We have everything you need for {coffeeKey}, please insert coins ')
-    q, d, n, p = input("Enter 4 values: ").split()
-    coins = process_coins(float(q),float(d),float(n),float(p))
-    isEnoughCoins = coins >= MENU[coffeeKey]["cost"]
-    print(f'money coins: {coins}, cost: {MENU[coffeeKey]["cost"]}')
-    if not isEnoughCoins:
+    q, d, n, p = input("Enter 4 values with a space in between: ").split()
+    input_coins = process_coins(float(q),float(d),float(n),float(p))
+    coffee_cost = MENU[coffeeKey]["cost"]
+    has_enough_coins = input_coins >= coffee_cost
+    print(f'money coins: {input_coins}, cost: {coffee_cost}')
+    if not has_enough_coins:
         print("Sorry that's not enough money. Money refunded.")
         return False
+
+    # TODO: move out here
+    # make coffee
+    for key, value in MENU[coffeeKey]["ingredients"].items():
+        resources[key] -= int(value)
+
+    # TODO: add the money into the resource, move out there
+    resources["money"] += coffee_cost
+
+    # Return the change
+    if input_coins == coffee_cost:
+        print(f'The coffee costs £{coffee_cost}, perfect here is no change.')
+    else:
+        print(f'The coffee costs £{coffee_cost}, here is £{round(input_coins - coffee_cost, 2)} in change.')
     return True
 
 
@@ -93,8 +115,20 @@ def question():
     if desire_coffee.lower() == offStr.lower():
         turn_off()
     elif desire_coffee.lower() == reportStr.lower():
+        # report before purchasing the coffee
         print_report()
-    check_resource(desire_coffee)
+    else:
+        print(f'=======Report before purchasing {desire_coffee}=======')
+        print_report()
+        print("================================================")
+        has_enough = check_resource(desire_coffee)
+        # transaction is successful and have enough resources
+        if has_enough:
+            # report the money into the resource
+            print(f'=======Report after purchasing {desire_coffee}=======')
+            print_report()
+            print("===============================================")
+            print(f'Here is your {desire_coffee}. Enjoy!')
 
 
 # Turn off the coffee machine
