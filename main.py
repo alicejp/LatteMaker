@@ -60,14 +60,22 @@ def print_report():
             print(f'{key}: {unit}{value}')
 
 
-def check_resource(coffeeKey):
+def check_coffee_resource(coffee_key):
     # check ingredients
-    for key, value in MENU[coffeeKey]["ingredients"].items():
+    for key, value in MENU[coffee_key]["ingredients"].items():
         is_enough = (int(value) <= int(resources[key]))
         print(f'{key}: {value}, isEnough {is_enough}')
         if not is_enough:
-            print(f'Sorry there is not enough {key} for {coffeeKey}')
+            print(f'Sorry there is not enough {key} for {coffee_key}')
             return False
+    return True
+
+
+def check_resource(coffeeKey):
+    # check ingredients
+    is_enough = check_coffee_resource(coffeeKey)
+    if not is_enough:
+        return False
 
     # check money
     # if it is enough, we should use the ingredient, but we might need to check the cash first
@@ -108,9 +116,31 @@ def process_coins(quarter, dime, nickel, pennie):
     return round(total, 2)
 
 
+def strike_through(text):
+    return '\u0336'.join(text) + '\u0336'
+
+
+def format_question():
+    show_espresso = "espresso"
+    if not check_coffee_resource("espresso"):
+        show_espresso = strike_through("espresso")
+
+    show_latte = "latte"
+    if not check_coffee_resource("latte"):
+        show_latte = strike_through("latte")
+
+    show_cappuccino = "cappuccino"
+    if not check_coffee_resource("cappuccino"):
+        show_cappuccino = strike_through("cappuccino")
+
+    return "What would you want? " + show_espresso + " " + show_latte + " " + show_cappuccino
+
+
 # What would you want? (espresso/latte/cappuccino)?
 def question():
-    desire_coffee = input("What would you want? (espresso/latte/cappuccino) ")
+    # check the coffee resource before print this out :)
+    desire_coffee = input(format_question()+ " ")
+
     print("You desire: " + desire_coffee)
     if desire_coffee.lower() == offStr.lower():
         turn_off()
